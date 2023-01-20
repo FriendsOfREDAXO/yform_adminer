@@ -1,0 +1,10 @@
+package: yform_adminer
+version: '1.0.0'
+author: 'FriendsOfRedaxo | Christoph Böcker'
+supportpage: https://github.com/FriendsOfREDAXO/yform_adminer
+
+requires:
+    redaxo: '^5.13.0'
+    yform: '^4.0.0'
+    php:
+        version: '^8.0'

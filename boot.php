@@ -27,6 +27,9 @@ use rex_perm;
 
 rex_perm::register('yform_adminer[]');
 
-if (rex::isBackend() && rex::requireUser()->hasPerm('yform_adminer[]') && rex_addon::get('yform')->isAvailable() && rex_addon::get('adminer')->isAvailable()) {
-    YFormAdminer::init();
+if( rex::isBackend()) {
+    $user = rex::getUser();
+    if (null !== $user && $user->hasPerm('yform_adminer[]') && rex_addon::get('yform')->isAvailable() && rex_addon::get('adminer')->isAvailable()) {
+        YFormAdminer::init();
+    }
 }

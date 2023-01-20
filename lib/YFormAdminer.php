@@ -78,11 +78,17 @@ class YFormAdminer
 
         // Action-Buttons umbauen
         $query = $list->getQuery();
+
+        $query = clone $query;
+        $query->resetLimit();
+        $query->whereRaw(sprintf('`%s`.`id`=###id###', $query->getTableAlias()));
+
         $list->setColumnFormat(rex_i18n::msg('yform_function').' ', 'custom', static function ($params) use ($label, $query) {
             $query = clone $query;
             $query->resetLimit();
             $query->whereRaw(sprintf('`%s`.`id`=###id###', $query->getTableAlias()));
-            $url = self::dbSql($query->getQuery());
+            $stmt = self::preparedQuery ($query->getQuery(), $query->getParams());
+            $url = self::dbSql($stmt);
             $link = self::link($url, self::ICO_QRY, 'Adminer: Datensatz-Abfrage', 'Datensatz-Abfrage');
             return str_replace($label, $link, $params['value']);
         });
@@ -107,10 +113,10 @@ class YFormAdminer
                 if (isset(self::$query[$label])) {
                     $query = clone self::$query[$label];
                     $query->resetLimit();
-                    $sql = $query->getQuery();
+                    $stmt = self::preparedQuery ($query->getQuery(), $query->getParams());
                     $item = [
                         'label' => '&thinsp;'.self::icon(self::ICO_QRY).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
-                        'url' => self::dbSql($sql),
+                        'url' => self::dbSql($stmt),
                         'attributes' => [
                             'class' => ['btn-default', self::iconClass(self::ICO_QRY)],
                             'target' => ['_blank'],
@@ -389,5 +395,33 @@ class YFormAdminer
             $label = ' ' . $label;
         }
         return sprintf('<a href="%s" class="%s" target="_blank" title="%s">%s%s</a>', $url, self::iconClass($icon), $title, self::icon($icon), $label);
+    }
+
+    public static function preparedQuery (string $query,array $params = []) {
+        if( 0 == count($params) ) {
+            return $query;
+        }
+        $sql = \rex_sql::factory();
+        $i = 0;
+        return  preg_replace_callback(
+            '/\?|((?<!:):[a-z0-9_]+)/i',
+            function ($matches) use ($params, &$i, $sql) {
+                if ('?' === $matches[0]) {
+                    $keys = [$i];
+                } else {
+                    $keys = [$matches[0], substr($matches[0], 1)];
+                }
+
+                foreach ($keys as $key) {
+                    if (array_key_exists($key, $params)) {
+                        ++$i;
+                        return $sql->escape($params[$key]);
+                    }
+                }
+
+                return $matches[0];
+            },
+            $query
+        );
     }
 }

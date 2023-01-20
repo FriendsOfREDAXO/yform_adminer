@@ -10,7 +10,7 @@ Das Addon hängt ausschließlich über Extension-Points zusätzliche Button in K
 
 ## In der Datenansicht:
 
-![](https://github.com/FriendsOfREDAXO/yform_adminer/raw/assets/data_list.png)
+![](https://raw.githubusercontent.com/FriendsOfREDAXO/yform_adminer/main/internal_support/data_list.png)
 
 1. Die Daten der Tabelle
 2. Die SQL-Query aus der zugehörigen YOrm-Query der Tabelle
@@ -23,7 +23,7 @@ Das Addon hängt ausschließlich über Extension-Points zusätzliche Button in K
 
 ## Table-Manager: Tabellenverwaltung:
 
-![](https://github.com/FriendsOfREDAXO/yform_adminer/raw/assets/table_edit.png)
+![](https://raw.githubusercontent.com/FriendsOfREDAXO/yform_adminer/main/internal_support/table_edit.png)
 
 7. Tabelle `rex_yform_field` insgesamt
 8. Adminer-Gesamtansicht
@@ -33,7 +33,7 @@ Das Addon hängt ausschließlich über Extension-Points zusätzliche Button in K
 
 ## Table-Manager: Tabellenverwaltung:
 
-![](https://github.com/FriendsOfREDAXO/yform_adminer/raw/assets/table_field.png)
+![](https://raw.githubusercontent.com/FriendsOfREDAXO/yform_adminer/main/internal_support/table_field.png)
 
 11. Die Felddefinitionen der **Tabelle** in `rex_yform_field` (Auszug aus `rex_yform_field`) &rarr; 4./9.
 12. Die Felddefinitionen des **Feldes** in `rex_yform_field` (Auszug aus `rex_yform_field`)

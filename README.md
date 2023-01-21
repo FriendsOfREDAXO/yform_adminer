@@ -1,14 +1,12 @@
 # Adminer in YForm verlinken
 
-Berechtigte Benutzer - also Entwickler oder Admin - erhalten im YForm-Tablemanager kontext-bezogene Buttons, mit denen man direkt mittels Adminer Tabellen oder gefilterte Daten angezeigt bekommt. So kann man schneller mit nur einem Klick in der Datenbank nach dem Rechten sehen, Ergebnisse kontrollieren oder sonstwie eingreifen.
+Berechtigte Benutzer erhalten im YForm-Tablemanager kontext-bezogene Buttons, mit denen man direkt mittels Adminer Tabellen oder gefilterte Daten angezeigt bekommt. So kann man schneller mit nur einem Klick in der Datenbank nach dem Rechten sehen, Ergebnisse kontrollieren oder sonstwie eingreifen.
 
-Dazu muss neben dem Addon ["YForm"](https://github.com/yakamara/redaxo_yform) auch das FOR-Addon ["Adminer"](https://github.com/FriendsOfREDAXO/adminer) installiert und aktiviert sein.
+Dazu muss neben dem Addon [YForm](https://github.com/yakamara/redaxo_yform) auch das FOR-Addon [Adminer](https://github.com/FriendsOfREDAXO/adminer) installiert und aktiviert sein.
 
-Berechtigt sind Administratoren und User mit dem Recht `yform_adminer[]`.
+Das Addon hängt ausschließlich über Extension-Points zusätzliche Button in Kopfzeilen und Spalten.
 
-Das Addon hängt ausschließlich über Extension-Points zusätzliche Button in Kopfzeilen und Spalten. 
-
-## In der Datenansicht:
+##  Datensätze in der Listen-Ansicht einer YForm-Tabelle
 
 ![](https://raw.githubusercontent.com/FriendsOfREDAXO/yform_adminer/main/internal_support/data_list.png)
 
@@ -19,9 +17,9 @@ Das Addon hängt ausschließlich über Extension-Points zusätzliche Button in K
 5. Der Datensatz zu dieser Zeile
 6. Die SQL-Query aus der zugehörigen YOrm-Query, auf diesen Satz beschränkt (id=...)
 
-> zu 2. und 6.: Je nach Komplexität der Query (z.B. durch Joins erweitert) kann es auch nicht funktionieren.
+> Zu 2. und 6.: Je nach Komplexität der Query (z.B. durch Joins erweitert) kann es auch nicht funktionieren.
 
-## Table-Manager: Tabellenverwaltung:
+## Tabellendefinition im Table-Manager 
 
 ![](https://raw.githubusercontent.com/FriendsOfREDAXO/yform_adminer/main/internal_support/table_edit.png)
 
@@ -30,8 +28,7 @@ Das Addon hängt ausschließlich über Extension-Points zusätzliche Button in K
 9. Die Felddefinitionen der Tabelle in `rex_yform_field` (Auszug aus `rex_yform_field`) &rarr; 4./11.
 10. Die Daten der Tabelle
 
-
-## Table-Manager: Tabellenverwaltung:
+## Felddefinitionen im Table-Manager
 
 ![](https://raw.githubusercontent.com/FriendsOfREDAXO/yform_adminer/main/internal_support/table_field.png)
 

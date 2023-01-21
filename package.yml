@@ -6,5 +6,6 @@ supportpage: https://github.com/FriendsOfREDAXO/yform_adminer
 requires:
     redaxo: '^5.13.0'
     yform: '^4.0.0'
+    adminer: '^1'
     php:
         version: '^8.0'

@@ -1,0 +1,8 @@
+yform_adminer_ydl_sql_title = Adminer: Datensatz-Abfrage
+yform_adminer_ydl_sql_label = Datensatz-Abfrage
+yform_adminer_ydl_ds_title = Adminer: Datensatz in der DB anzeigen
+yform_adminer_ydll_sql_title = Adminer: Abfrage-Daten anzeigen
+yform_adminer_ydll_data_title =m Adminer: Daten anzeigen
+yform_adminer_table_title = Adminer: yform_table ⇒ {0}
+yform_adminer_field_title = Adminer: yform_field  ⇒ {0}
+yform_adminer_datatable_title = Adminer:  {0}

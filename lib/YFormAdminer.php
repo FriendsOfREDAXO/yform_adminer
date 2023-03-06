@@ -87,13 +87,27 @@ class YFormAdminer
         $query->resetLimit();
         $query->whereRaw(sprintf('`%s`.`id`=###id###', $query->getTableAlias()));
 
-        $list->setColumnFormat(rex_i18n::msg('yform_function').' ', 'custom', static function ($params) use ($label, $query) {
+        $columnName = rex_i18n::msg('yform_function').' ';
+
+        // Falls es schon einen Callback auf der Funktion-Spalte gibt ... berücksichtigen
+        $predecessor = $list->getColumnFormat($columnName);
+        $predecessorCallback = null;
+        if (null !== $predecessor && 'custom' === $predecessor[0]) {
+            $predecessorCallback = $predecessor[1];
+        }
+
+        $list->setColumnFormat($columnName, 'custom', static function ($params) use ($label, $query, $predecessorCallback) {
+            // ggf. vorherige Callback-Funktion ablaufen lassen
+            if (null !== $predecessorCallback) {
+                $params['value'] = $predecessorCallback($params);
+            }
+            // Eigene Änderungen anhängen
             $query = clone $query;
             $query->resetLimit();
             $query->whereRaw(sprintf('`%s`.`id`=###id###', $query->getTableAlias()));
             $stmt = self::preparedQuery($query->getQuery(), $query->getParams());
             $url = self::dbSql($stmt);
-            $link = self::link($url, self::ICO_QRY, rex_i18n::msg('yform_adminer_ydl_sql_title'), rex_i18n::msg('yform_adminer_ydl_sql_label'));
+            $link = self::link($url, self::ICO_QRY, 'Adminer: Datensatz-Abfrage', 'Datensatz-Abfrage');
             return str_replace($label, $link, $params['value']);
         });
     }

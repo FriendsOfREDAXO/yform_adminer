@@ -2,9 +2,10 @@
 
 ## upcomming **xx.xx.2023 1.1.0
 
-- Button-Texte und Label auf i18n-Verfahen umgestellt (de_de.lang) (#8)
+- Button-Texte und Label auf i18n-Verfahen umgestellt (de_de.lang) (@christophboecker #8)
 - Verschiedene Korrekturen in der README.md durch Alexander Walther @alxndr-w (#7)
 - `require adminer` in `package.yml` eingefügt von Alexander Walther @alxndr-w (#6)
+- Die Callback-Funktion (Custom-Format für der Spalte "Funktion") berücksichtigt eine evtl schon vorher gesetze Funktion (Aufruf-Kaskadierung) (@christophboecker #9)
 
 ## **20.01.2023 Version 1.0.2**
 

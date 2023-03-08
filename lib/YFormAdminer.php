@@ -13,12 +13,12 @@ use rex_be_controller;
 use rex_extension;
 use rex_extension_point;
 use rex_i18n;
+use rex_path;
 use rex_sql;
 use rex_url;
 use rex_yform_list;
 use rex_yform_manager_dataset;
 use rex_yform_manager_query;
-
 use rex_yform_manager_table;
 
 use function array_key_exists;
@@ -33,10 +33,11 @@ class YFormAdminer
     protected const ICO_YF = 4;
 
     /**
-     * @api
      * @var array<string,rex_yform_manager_query<rex_yform_manager_dataset>>
      */
     protected static array $query = [];
+
+    protected static bool $isPostYform404 = true;
 
     /**
      * Initialisiert den Einbau der Adminer-Button via EP.
@@ -44,6 +45,16 @@ class YFormAdminer
      */
     public static function init(): void
     {
+        /**
+         * bis YForm 4.0.4 waren die Action-Buttons einfach HTML-Strings.
+         * Post-4.0.4. sind es Arrays, die in einem List-Fragment verwertet werden.
+         * Hier die beiden Fälle unterscheiden.
+         * Note:
+         * Stand 07.03.2023 gibt es nur das GH-Repo und keine neue Versionsnummer.
+         * Daher auf das neue Fragment als Unterscheidungsmerkmal setzen.
+         */
+        self::$isPostYform404 = is_file(rex_path::plugin('yform', 'manager', 'fragments/yform/manager/page/list.php'));
+
         rex_extension::register('YFORM_DATA_LIST', [self::class, 'YFORM_DATA_LIST'], rex_extension::LATE);
 
         // Im Tabellen-Header: Tabelle im Adminer anzeigen
@@ -87,28 +98,28 @@ class YFormAdminer
         $query->resetLimit();
         $query->whereRaw(sprintf('`%s`.`id`=###id###', $query->getTableAlias()));
 
+        $stmt = self::preparedQuery($query->getQuery(), $query->getParams());
+        $stmt = urlencode($stmt);
+        $stmt = str_replace('%23%23%23', '###', $stmt);
+
         $columnName = rex_i18n::msg('yform_function').' ';
 
-        // Falls es schon einen Callback auf der Funktion-Spalte gibt ... berücksichtigen
-        $predecessor = $list->getColumnFormat($columnName);
-        $predecessorCallback = null;
-        if (null !== $predecessor && 'custom' === $predecessor[0]) {
-            $predecessorCallback = $predecessor[1];
+        // Vorhandene Custom-Function auf der Spalte auch ausführen (Kaskadieren)
+        $customFunction = $list->getColumnFormat($columnName);
+        $customCallback = null;
+        $customParams = null;
+        if (null !== $customFunction && isset($customFunction[0]) && 'custom' === $customFunction[0]) {
+            $customCallback = $customFunction[1];
+            $customParams = $customFunction[2];
         }
 
-        $list->setColumnFormat($columnName, 'custom', static function ($params) use ($label, $query, $predecessorCallback) {
+        $list->setColumnFormat($columnName, 'custom', static function ($params) use ($label, $stmt, $customCallback, $customParams) {
             // ggf. vorherige Callback-Funktion ablaufen lassen
-            if (null !== $predecessorCallback) {
-                $params['value'] = $predecessorCallback($params);
+            if (null !== $customCallback) {
+                $params['value'] = $customCallback(array_merge($params, ['params' => $customParams]));
             }
-            // Eigene Änderungen anhängen
-            $query = clone $query;
-            $query->resetLimit();
-            $query->whereRaw(sprintf('`%s`.`id`=###id###', $query->getTableAlias()));
-            $stmt = self::preparedQuery($query->getQuery(), $query->getParams());
-            $url = self::dbSql($stmt);
-            $link = self::link($url, self::ICO_QRY, 'Adminer: Datensatz-Abfrage', 'Datensatz-Abfrage');
-            return str_replace($label, $link, $params['value']);
+            // Query einbauen
+            return str_replace($label, $stmt, $params['value']);
         });
     }
 
@@ -185,26 +196,56 @@ class YFormAdminer
     }
 
     /**
-     * EP-Callback zu, Einfügen zusätzlicher Button in das Action-Menü
+     * EP-Callback zum Einfügen zusätzlicher Button in das Action-Menü
      * Da für die Anzeige der Daten auf BAsis der tatsächlichen Query (ggf. mit Joins etc.)
      * das Query-Object hier nicht zur Verfügung steht, wird nur ein Dummy-Eintrag eingebaut
      * und später in YFORM_DATA_LIST ersetzt.
      * @api
-     * @param rex_extension_point<array<string,string>> $ep
-     * @return array<string,string>
+     * @param rex_extension_point<array<string,mixed>> $ep
+     * @return array<string,mixed>
      */
     public static function YFORM_DATA_LIST_ACTION_BUTTONS(rex_extension_point $ep): array
     {
         /** @var rex_yform_manager_table $table */
         $table = $ep->getParam('table');
-        /** @var array<string,string> $buttons */
+        /** @var array<string,string|mixed> $buttons */
         $buttons = $ep->getSubject();
-        $url = self::dbEdit($table->getTableName(), '___id___');
-        $buttons['adminer'] = self::link($url, self::ICO_DB, 'Adminer: Datensatz in der DB anzeigen', 'Adminer');
 
-        // Anzeige des Abfrage-Datensatzes (SQL) => Dummy einbauen
+        // Adminer-Button für den Datensatz
+        $url = self::dbEdit($table->getTableName(), '___id___');
+        $title = 'Adminer: Datensatz in der DB anzeigen';
+        if (self::$isPostYform404) {
+            $buttons['adminer'] = [
+                'url' => $url,
+                'content' => self::icon(self::ICO_DB) . ' Adminer',
+                'attributes' => [
+                    'class' => self::iconClass(self::ICO_DB),
+                    'target' => '_blank',
+                    'title' => $title,
+                ],
+            ];
+        } else {
+            $buttons['adminer'] = self::link($url, self::ICO_DB, $title, 'Adminer');
+        }
+
+        // Adminer-Button für die SQL-Query
         $label = md5(__CLASS__.$table->getTableName());
-        $buttons[$label] = $label;
+        $url = self::dbSql($label);
+        $title = 'Adminer: Abfrage-Daten anzeigen';
+        if (self::$isPostYform404) {
+            $buttons['adminer-sql'] = [
+                'url' => $url,
+                'content' => self::icon(self::ICO_DB) . ' Datensatz-Abfrage',
+                'attributes' => [
+                    'class' => self::iconClass(self::ICO_DB),
+                    'target' => '_blank',
+                    'title' => $title,
+                ],
+            ];
+        } else {
+            $buttons['adminer-sql'] = self::link($url, self::ICO_DB, $title, 'Datensatz-Abfrage');
+        }
+
         return $buttons;
     }
 

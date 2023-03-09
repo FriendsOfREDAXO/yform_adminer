@@ -2,8 +2,6 @@
 
 /**
  * Hilfsklasse mit allen Funktionen zum Einbau der Adminer-Button.
- *
- * STAN: sämtliche "is never used"-Meldungen sind falsch.
  */
 
 namespace FriendsOfRedaxo\YFormAdminer;
@@ -37,31 +35,24 @@ class YFormAdminer
      */
     protected static array $query = [];
 
-    protected static bool $isPostYform404 = true;
-
     /**
      * Initialisiert den Einbau der Adminer-Button via EP.
      * @api
      */
     public static function init(): void
     {
-        /**
-         * bis YForm 4.0.4 waren die Action-Buttons einfach HTML-Strings.
-         * Post-4.0.4. sind es Arrays, die in einem List-Fragment verwertet werden.
-         * Hier die beiden Fälle unterscheiden.
-         * Note:
-         * Stand 07.03.2023 gibt es nur das GH-Repo und keine neue Versionsnummer.
-         * Daher auf das neue Fragment als Unterscheidungsmerkmal setzen.
-         */
-        self::$isPostYform404 = is_file(rex_path::plugin('yform', 'manager', 'fragments/yform/manager/page/list.php'));
-
-        rex_extension::register('YFORM_DATA_LIST', [self::class, 'YFORM_DATA_LIST'], rex_extension::LATE);
+        // Vorbereitung: Query ermitteln
+        rex_extension::register('YFORM_DATA_LIST_QUERY', [self::class, 'YFORM_DATA_LIST_QUERY'], rex_extension::LATE);
 
         // Im Tabellen-Header: Tabelle im Adminer anzeigen
+        // STAN: Parameter #2 $extension of static method rex_extension::register() expects callable(rex_extension_point<array<string, array>>): mixed, array{'FriendsOfRedaxo\\YFormAdminer\\YFormAdminer', 'YFORM_DATA_LIST…'} given.
+        // Was auch immer hier gewünscht ist .... 
         rex_extension::register('YFORM_DATA_LIST_LINKS', [self::class, 'YFORM_DATA_LIST_LINKS'], rex_extension::LATE);
 
         // In den Action-Buttons: Datensatz im Adminer (Edit) anzeigen
-        rex_extension::register('YFORM_DATA_LIST_ACTION_BUTTONS', [self::class, 'YFORM_DATA_LIST_ACTION_BUTTONS']);
+        // STAN: Parameter #2 $extension of static method rex_extension::register() expects callable(rex_extension_point<array<string, mixed>>): mixed, array{'FriendsOfRedaxo\\YFormAdminer\\YFormAdminer', 'YFORM_DATA_LIST…'} given.
+        // Was auch immer hier gewünscht ist .... 
+        rex_extension::register('YFORM_DATA_LIST_ACTION_BUTTONS', [self::class, 'YFORM_DATA_LIST_ACTION_BUTTONS'], rex_extension::LATE);
 
         // Nur im Field-Editor: Links auf Felddefinition
         if ('yform/manager/table_field' === rex_be_controller::getCurrentPage()) {
@@ -75,146 +66,115 @@ class YFormAdminer
     }
 
     /**
-     * EP-Callback zur Konfiguration der  Datentabelle
-     * Damit wird der im EP YFORM_DATA_LIST_ACTION_BUTTONS hinzugefügte Dummy-Button mit
-     * konkretem Inhalt (der Abfrage) gefüllt.
+     * EP-Callback zur Ermittlung der Query.
+     * Die Query wird für die spätere Nutzung durch andere EPs abgelegt.
      * @api
-     * @param rex_extension_point<rex_yform_list> $ep
+     * @param rex_extension_point<rex_yform_manager_query<rex_yform_manager_dataset>> $ep
      */
-    public static function YFORM_DATA_LIST(rex_extension_point $ep): void
+    public static function YFORM_DATA_LIST_QUERY(rex_extension_point $ep): void
     {
-        /** @var rex_yform_list $list */
-        $list = $ep->getSubject();
-
-        /** @var rex_yform_manager_table $table */
-        $table = $ep->getParam('table');
-        $label = md5(__CLASS__.$table->getTableName());
-
-        self::$query[$label] = $list->getQuery();
-
-        // Action-Buttons umbauen
-
-        $query = clone self::$query[$label];
-        $query->resetLimit();
-        $query->whereRaw(sprintf('`%s`.`id`=###id###', $query->getTableAlias()));
-
-        $stmt = self::preparedQuery($query->getQuery(), $query->getParams());
-        $stmt = urlencode($stmt);
-        $stmt = str_replace('%23%23%23', '###', $stmt);
-
-        $columnName = rex_i18n::msg('yform_function').' ';
-
-        // Vorhandene Custom-Function auf der Spalte auch ausführen (Kaskadieren)
-        $customFunction = $list->getColumnFormat($columnName);
-        $customCallback = null;
-        $customParams = null;
-        if (null !== $customFunction && isset($customFunction[0]) && 'custom' === $customFunction[0]) {
-            $customCallback = $customFunction[1];
-            $customParams = $customFunction[2];
-        }
-
-        $list->setColumnFormat($columnName, 'custom', static function ($params) use ($label, $stmt, $customCallback, $customParams) {
-            // ggf. vorherige Callback-Funktion ablaufen lassen
-            if (null !== $customCallback) {
-                $params['value'] = $customCallback(array_merge($params, ['params' => $customParams]));
-            }
-            // Query einbauen
-            return str_replace($label, $stmt, $params['value']);
-        });
+        $query = $ep->getSubject();
+        $label = md5(__CLASS__.$query->getTableName());
+        self::$query[$label] = $query;
     }
 
     /**
      * EP-Callback zur Konfiguration der Titelzeile über der Datentabelle.
      * @api
-     * @param rex_extension_point<array> $ep
-     *
-     * STAN: Method FriendsOfRedaxo\YFormAdminer\YFormAdminer::YFORM_DATA_LIST_LINKS() has parameter $ep with no value type specified in iterable type array.
-     * STAN: was auch immer da rein soll ... na ja, dann ist das halt so.
-     * @phpstan-ignore-next-line
+     * @param rex_extension_point<array<string,array<mixed>>> $ep
      */
     public static function YFORM_DATA_LIST_LINKS(rex_extension_point $ep): void
     {
-        if (false === $ep->getParam('popup')) {
-            $links = $ep->getSubject();
-            if (is_array($links['dataset_links'])) {
-                /** @var rex_yform_manager_table $table */
-                $table = $ep->getParam('table');
-                $label = md5(__CLASS__.$table->getTableName());
-                if (isset(self::$query[$label])) {
-                    $query = clone self::$query[$label];
-                    $query->resetLimit();
-                    $stmt = self::preparedQuery($query->getQuery(), $query->getParams());
-                    $item = [
-                        'label' => '&thinsp;'.self::icon(self::ICO_QRY).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
-                        'url' => self::dbSql($stmt),
-                        'attributes' => [
-                            'class' => ['btn-default', self::iconClass(self::ICO_QRY)],
-                            'target' => ['_blank'],
-                            'title' => 'Adminer: Abfrage-Daten anzeigen',
-                        ],
-                    ];
-                    array_unshift($links['dataset_links'], $item);
-                }
-
+        if (true === $ep->getParam('popup')) {
+            return;
+        }
+        $links = $ep->getSubject();
+        if (is_array($links['dataset_links'])) {
+            /** @var rex_yform_manager_table $table */
+            $table = $ep->getParam('table');
+            $label = md5(__CLASS__.$table->getTableName());
+            if (isset(self::$query[$label])) {
+                $query = clone self::$query[$label];
+                $query->resetLimit();
+                $stmt = self::preparedQuery($query->getQuery(), $query->getParams());
                 $item = [
-                    'label' => '&thinsp;'.self::icon(self::ICO_DB).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
-                    'url' => self::dbTable($ep->getParams()['table']->getTableName()),
+                    'label' => '&thinsp;'.self::icon(self::ICO_QRY).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
+                    'url' => self::dbSql($stmt),
                     'attributes' => [
-                        'class' => ['btn-default', self::iconClass(self::ICO_DB)],
+                        'class' => ['btn-default', self::iconClass(self::ICO_QRY)],
                         'target' => ['_blank'],
-                        'title' => 'Adminer: Daten anzeigen',
+                        'title' => rex_i18n::msg('yform_adminer_ydll_sql_title'),
                     ],
                 ];
                 array_unshift($links['dataset_links'], $item);
             }
-            if (is_array($links['table_links'])) {
-                $item = [
-                    'label' => '&thinsp;'.self::icon(self::ICO_YF).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
-                    'url' => self::YformTableTable($ep->getParams()['table']->getTableName()),
-                    'attributes' => [
-                        'class' => ['btn-default', self::iconClass(self::ICO_YF)],
-                        'target' => ['_blank'],
-                        'title' => 'Adminer: yform_table-Eintrag',
-                    ],
-                ];
-                array_unshift($links['table_links'], $item);
-            }
-            if (is_array($links['field_links'])) {
-                $item = [
-                    'label' => '&thinsp;'.self::icon(self::ICO_YF).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
-                    'url' => self::yformFieldTable($ep->getParams()['table']->getTableName()),
-                    'attributes' => [
-                        'class' => ['btn-default', self::iconClass(self::ICO_YF)],
-                        'target' => ['_blank'],
-                        'title' => 'Adminer: yform_field-Einträge',
-                    ],
-                ];
-                array_unshift($links['field_links'], $item);
-            }
-            $ep->setSubject($links);
+
+            $item = [
+                'label' => '&thinsp;'.self::icon(self::ICO_DB).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
+                'url' => self::dbTable($ep->getParams()['table']->getTableName()),
+                'attributes' => [
+                    'class' => ['btn-default', self::iconClass(self::ICO_DB)],
+                    'target' => ['_blank'],
+                    'title' => rex_i18n::msg('yform_adminer_ydll_data_title'),
+                ],
+            ];
+            array_unshift($links['dataset_links'], $item);
         }
+        if (is_array($links['table_links'])) {
+            $item = [
+                'label' => '&thinsp;'.self::icon(self::ICO_YF).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
+                'url' => self::YformTableTable($ep->getParams()['table']->getTableName()),
+                'attributes' => [
+                    'class' => ['btn-default', self::iconClass(self::ICO_YF)],
+                    'target' => ['_blank'],
+                    'title' => rex_i18n::msg('yform_adminer_action_entry', 'yform_table'),
+                ],
+            ];
+            array_unshift($links['table_links'], $item);
+        }
+        if (is_array($links['field_links'])) {
+            $item = [
+                'label' => '&thinsp;'.self::icon(self::ICO_YF).'&thinsp;', // ohne thinsp stimmt die Höhe nicht
+                'url' => self::yformFieldTable($ep->getParams()['table']->getTableName()),
+                'attributes' => [
+                    'class' => ['btn-default', self::iconClass(self::ICO_YF)],
+                    'target' => ['_blank'],
+                    'title' => rex_i18n::msg('yform_adminer_action_entries', 'yform_field'),
+                ],
+            ];
+            array_unshift($links['field_links'], $item);
+        }
+        $ep->setSubject($links);
     }
 
     /**
      * EP-Callback zum Einfügen zusätzlicher Button in das Action-Menü
-     * Da für die Anzeige der Daten auf BAsis der tatsächlichen Query (ggf. mit Joins etc.)
+     * Da für die Anzeige der Daten auf Basis der tatsächlichen Query (ggf. mit Joins etc.)
      * das Query-Object hier nicht zur Verfügung steht, wird nur ein Dummy-Eintrag eingebaut
      * und später in YFORM_DATA_LIST ersetzt.
      * @api
      * @param rex_extension_point<array<string,mixed>> $ep
-     * @return array<string,mixed>
      */
-    public static function YFORM_DATA_LIST_ACTION_BUTTONS(rex_extension_point $ep): array
+    public static function YFORM_DATA_LIST_ACTION_BUTTONS(rex_extension_point $ep): void
     {
         /** @var rex_yform_manager_table $table */
         $table = $ep->getParam('table');
-        /** @var array<string,string|mixed> $buttons */
         $buttons = $ep->getSubject();
+
+        /**
+         * bis YForm 4.0.4 waren die Action-Buttons einfach HTML-Strings.
+         * Post-4.0.4. sind es Arrays, die in einem List-Fragment verwertet werden.
+         * Hier die beiden Fälle unterscheiden.
+         * Note:
+         * Stand 07.03.2023 gibt es nur das GH-Repo und keine neue Versionsnummer.
+         * Daher auf das neue Fragment als Unterscheidungsmerkmal setzen.
+         */
+        $isPostYform404 = is_file(rex_path::plugin('yform', 'manager', 'fragments/yform/manager/page/list.php'));
 
         // Adminer-Button für den Datensatz
         $url = self::dbEdit($table->getTableName(), '___id___');
-        $title = 'Adminer: Datensatz in der DB anzeigen';
-        if (self::$isPostYform404) {
+        $title = rex_i18n::msg('yform_adminer_ydl_ds_title');
+        if ($isPostYform404) {
             $buttons['adminer'] = [
                 'url' => $url,
                 'content' => self::icon(self::ICO_DB) . ' Adminer',
@@ -230,23 +190,30 @@ class YFormAdminer
 
         // Adminer-Button für die SQL-Query
         $label = md5(__CLASS__.$table->getTableName());
-        $url = self::dbSql($label);
-        $title = 'Adminer: Abfrage-Daten anzeigen';
-        if (self::$isPostYform404) {
-            $buttons['adminer-sql'] = [
-                'url' => $url,
-                'content' => self::icon(self::ICO_DB) . ' Datensatz-Abfrage',
-                'attributes' => [
-                    'class' => self::iconClass(self::ICO_DB),
-                    'target' => '_blank',
-                    'title' => $title,
-                ],
-            ];
-        } else {
-            $buttons['adminer-sql'] = self::link($url, self::ICO_DB, $title, 'Datensatz-Abfrage');
-        }
+        if (isset(self::$query[$label])) {
+            // Aus der Query das SQL-Statement erzeugen
+            $query = clone self::$query[$label];
+            $query->resetLimit();
+            $query->whereRaw(sprintf('`%s`.`id`=###id###', $query->getTableAlias()));
+            $stmt = self::preparedQuery($query->getQuery(), $query->getParams());
+            $url = self::dbSql($stmt);
 
-        return $buttons;
+            $title = rex_i18n::msg('yform_adminer_ydll_sql_title');
+            if ($isPostYform404) {
+                $buttons['adminer-sql'] = [
+                    'url' => $url,
+                    'content' => self::icon(self::ICO_QRY) . ' ' . rex_i18n::msg('yform_adminer_ydl_sql_label'),
+                    'attributes' => [
+                        'class' => self::iconClass(self::ICO_QRY),
+                        'target' => '_blank',
+                        'title' => $title,
+                    ],
+                ];
+            } else {
+                $buttons['adminer-sql'] = self::link($url, self::ICO_QRY, $title, rex_i18n::msg('yform_adminer_ydl_sql_label'));
+            }
+        }
+        $ep->setSubject($buttons);
     }
 
     /**
@@ -272,8 +239,8 @@ class YFormAdminer
 
             $list->addColumn($columnName.'a', '');
             $list->setColumnLayout($columnName.'a', [
-                '<th class="rex-table-icon">'.self::link($tableUrl, self::ICO_YF, 'Adminer: '.$base.'&rarr;'.$table_name.'').'</th>',
-                '<td class="rex-table-icon">'.self::link($fieldUrl, self::ICO_YF, 'Adminer: '.$base.'&rarr;###name###').'</td>',
+                '<th class="rex-table-icon">'.self::link($tableUrl, self::ICO_YF, rex_i18n::msg('yform_adminer_action_title', $base, $table_name)).'</th>',
+                '<td class="rex-table-icon">'.self::link($fieldUrl, self::ICO_YF, rex_i18n::msg('yform_adminer_action_title', $base, '###name###')).'</td>',
             ]);
         }
     }
@@ -301,12 +268,12 @@ class YFormAdminer
             $list->addColumn($columnName, '');
             $list->setColumnLayout($columnName, [
                 '<th class="rex-table-icon">'
-                    .self::link($yformField, self::ICO_YF, 'Adminer: '.$base)
+                    .self::link($yformField, self::ICO_YF, rex_i18n::msg('yform_adminer_datatable_title', $base))
                     .self::link($adminerPur, self::ICO_ADM, 'Adminer').
                 '</th>',
                 '<td class="rex-table-icon">'
-                    .self::link($yformFieldTable, self::ICO_YF, 'Adminer: '.$base.'&rarr;###table_name###')
-                    .self::link($datatable, self::ICO_DB, 'Adminer: ###table_name###').
+                    .self::link($yformFieldTable, self::ICO_YF, rex_i18n::msg('yform_adminer_action_title', $base, '###table_name###'))
+                    .self::link($datatable, self::ICO_DB, rex_i18n::msg('yform_adminer_datatable_title', '###table_name###')).
                 '</td>',
             ]);
         }

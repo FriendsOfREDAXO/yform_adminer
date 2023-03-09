@@ -1,8 +1,8 @@
 # Changelog
 
-## **xx.yy.2023 1.2.0**
+## **09.03.2023 1.2.0**
 
-- Anpassungen an neue YForm-Versionen nach 4.0.4., die schon jetzt im Github-RePo zu finden sind.
+- Anpassungen an neue YForm-Versionen nach 4.0.4.; Die Änderungen sind schon jetzt im Github-Reoo zu finden.
   Ohne die Änderung würde das Addon zu einem Whoops führen, da die Action-buttons in der Funktion-Spalte
   der YForm-Tabellen geändert wurde (Array statt String). (@christophboecker #12,#13)
 - Code insgesamt noch einal überarbeitet (@christophboecker #13)

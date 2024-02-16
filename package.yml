@@ -1,5 +1,5 @@
 package: yform_adminer
-version: '1.2.0'
+version: '1.2.1dev'
 author: 'FriendsOfRedaxo | Christoph Böcker'
 supportpage: https://github.com/FriendsOfREDAXO/yform_adminer
 

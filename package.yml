@@ -1,11 +1,11 @@
 package: yform_adminer
-version: '1.2.0'
+version: '1.3.0'
 author: 'FriendsOfRedaxo | Christoph Böcker'
 supportpage: https://github.com/FriendsOfREDAXO/yform_adminer
 
 requires:
-    redaxo: '^5.13.0'
+    redaxo: '^5.15.0'
     yform: '^4.0.0'
     adminer: '^1'
     php:
-        version: '^8.0'
+        version: '^8.1'

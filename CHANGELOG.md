@@ -2,6 +2,11 @@
 
 ## **09.03.2023 1.2.0**
 
+- Callback umgestellt auf die "First Class Callable Syntax" bzw. "Callback-Funktionen als Objekte erster Klasse", also statt `[self::class, 'methode']` nun `self::methode(...)`. Damit wird die statische Code-Analyse verbessert (IDE, RexStan). (@christophboecker #18)
+- Notwendige Anhebung der Vorrausetzungen auf PHP ^8.1 und REDAXO ^5.15.
+
+## **09.03.2023 1.2.0**
+
 - Anpassungen an neue YForm-Versionen nach 4.0.4.; Die Änderungen sind schon jetzt im Github-Reoo zu finden.
   Ohne die Änderung würde das Addon zu einem Whoops führen, da die Action-buttons in der Funktion-Spalte
   der YForm-Tabellen geändert wurde (Array statt String). (@christophboecker #12,#13)

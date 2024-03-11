@@ -39,6 +39,10 @@ class YFormAdminer
      */
     public static function init(): void
     {
+        if (true === rex::getProperty('live_mode', false)) {
+            return;
+        }
+
         // Vorbereitung: Query ermitteln
         rex_extension::register('YFORM_DATA_LIST_QUERY', self::YFORM_DATA_LIST_QUERY(...), rex_extension::LATE);
 
@@ -71,6 +75,9 @@ class YFormAdminer
      */
     public static function YFORM_DATA_LIST_QUERY(rex_extension_point $ep): void
     {
+        if (true === rex::getProperty('live_mode', false)) {
+            return;
+        }
         $query = $ep->getSubject();
         $label = md5(__CLASS__ . $query->getTableName());
         self::$query[$label] = $query;
@@ -83,7 +90,7 @@ class YFormAdminer
      */
     public static function YFORM_DATA_LIST_LINKS(rex_extension_point $ep): void
     {
-        if (true === $ep->getParam('popup')) {
+        if (true === $ep->getParam('popup') || true === rex::getProperty('live_mode', false)) {
             return;
         }
         $links = $ep->getSubject();
@@ -155,6 +162,10 @@ class YFormAdminer
      */
     public static function YFORM_DATA_LIST_ACTION_BUTTONS(rex_extension_point $ep): void
     {
+        if (true === rex::getProperty('live_mode', false)) {
+            return;
+        }
+
         /** @var rex_yform_manager_table $table */
         $table = $ep->getParam('table');
         $buttons = $ep->getSubject();
@@ -222,6 +233,10 @@ class YFormAdminer
      */
     public static function TF_REX_LIST_GET(rex_extension_point $ep): void
     {
+        if (true === rex::getProperty('live_mode', false)) {
+            return;
+        }
+
         /** @var rex_yform_list $list */
         $list = $ep->getSubject();
         $page = $list->getParams()['page'] ?? '';
@@ -251,6 +266,10 @@ class YFormAdminer
      */
     public static function TE_REX_LIST_GET(rex_extension_point $ep): void
     {
+        if (true === rex::getProperty('live_mode', false)) {
+            return;
+        }
+
         /** @var rex_yform_list $list */
         $list = $ep->getSubject();
         $page = $list->getParams()['page'] ?? '';
@@ -314,6 +333,9 @@ class YFormAdminer
      */
     public static function dbTable(string $tablename, array $where = []): string
     {
+        if (true === rex::getProperty('live_mode', false)) {
+            return '';
+        }
         $params = [
             'select' => $tablename,
         ];
@@ -331,6 +353,9 @@ class YFormAdminer
      */
     public static function dbSql(string $query): string
     {
+        if (true === rex::getProperty('live_mode', false)) {
+            return '';
+        }
         return self::baseUrl(
             [
                 'sql' => $query,
@@ -353,6 +378,9 @@ class YFormAdminer
      */
     public static function dbEdit(string $tablename, int|string $id): string
     {
+        if (true === rex::getProperty('live_mode', false)) {
+            return '';
+        }
         return self::baseUrl(
             [
                 'edit' => $tablename,

@@ -11,6 +11,7 @@
     Das Kommendo wird nicht ausgeführt, nur angezeigt
   - `YFormAdminer::dbEdit($table_name,$data_id)`
     Ruft die edit-Maske für den angegebenen Datensatz der Tabelle im Adminer auf.
+- im Live-Mode deaktiviert
 
 ## **09.03.2023 1.3.0**
 

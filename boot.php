@@ -25,9 +25,14 @@ use rex;
 use rex_addon;
 use rex_perm;
 
+// nicht im live-Mode ausführen
+if (true === rex::getProperty('live_mode', false)) {
+    return;
+}
+
 rex_perm::register('yform_adminer[]');
 
-if( rex::isBackend()) {
+if (rex::isBackend()) {
     $user = rex::getUser();
     if (null !== $user && $user->hasPerm('yform_adminer[]') && rex_addon::get('yform')->isAvailable() && rex_addon::get('adminer')->isAvailable()) {
         YFormAdminer::init();

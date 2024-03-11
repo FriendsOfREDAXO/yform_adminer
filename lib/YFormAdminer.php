@@ -300,22 +300,36 @@ class YFormAdminer
 
     /**
      * Adminer: zeigt die angegebene Tabelle im Adminer.
+     * Where ist optional, muss aber diesen Aufbau haben, der nicht
+     * weiter überprüft wird!
+     *  [
+     *      [
+     *          'col' => spaltenname,
+     *          'op' => operator
+     *          'val' => vergleichswert
+     *      ],
+     *      ...
+     *  ].
      * @ api
      */
-    protected static function dbTable(string $tablename): string
+    public static function dbTable(string $tablename, array $where = []): string
     {
-        return self::baseUrl(
-            [
-                'select' => $tablename,
-            ],
-        );
+        $params = [
+            'select' => $tablename,
+        ];
+        foreach ($where as $key => $item) {
+            foreach ($item as $k => $v) {
+                $params[sprintf('where[%s][%s]',$key, $k)] = $v;
+            }
+        }
+        return self::baseUrl($params);
     }
 
     /**
      * Adminer: ruft die Adminer-Seite "SQL-Kommando" auf.
      * @ api
      */
-    protected static function dbSql(string $query): string
+    public static function dbSql(string $query): string
     {
         return self::baseUrl(
             [
@@ -337,7 +351,7 @@ class YFormAdminer
      * Adminer: Ruft die edit-Maske für den angegebenen Datensatz der Tabelle im Adminer auf.
      * @ api
      */
-    protected static function dbEdit(string $tablename, int|string $id): string
+    public static function dbEdit(string $tablename, int|string $id): string
     {
         return self::baseUrl(
             [
@@ -353,12 +367,14 @@ class YFormAdminer
      */
     protected static function YformTableTable(string $tablename): string
     {
-        return self::baseUrl(
+        return self::dbTable(
+            rex::getTable('yform_table'),
             [
-                'select' => rex::getTable('yform_table'),
-                'where[0][col]' => 'table_name',
-                'where[0][op]' => '=',
-                'where[0][val]' => $tablename,
+                [
+                    'col' => 'table_name',
+                    'op' => '=',
+                    'val' => $tablename,
+                ],
             ],
         );
     }
@@ -369,12 +385,14 @@ class YFormAdminer
      */
     protected static function yformFieldTable(string $tablename): string
     {
-        return self::baseUrl(
+        return self::dbTable(
+            rex::getTable('yform_field'),
             [
-                'select' => rex::getTable('yform_field'),
-                'where[0][col]' => 'table_name',
-                'where[0][op]' => '=',
-                'where[0][val]' => $tablename,
+                [
+                    'col' => 'table_name',
+                    'op' => '=',
+                    'val' => $tablename,
+                ],
             ],
         );
     }
@@ -385,12 +403,14 @@ class YFormAdminer
      */
     protected static function yformFieldItem(int|string $id): string
     {
-        return self::baseUrl(
+        return self::dbTable(
+            rex::getTable('yform_field'),
             [
-                'select' => rex::getTable('yform_field'),
-                'where[0][col]' => 'id',
-                'where[0][op]' => '=',
-                'where[0][val]' => $id,
+                [
+                    'col' => 'id',
+                    'op' => '=',
+                    'val' => $id,
+                ],
             ],
         );
     }

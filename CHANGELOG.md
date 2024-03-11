@@ -1,6 +1,18 @@
 # Changelog
 
-## **09.03.2023 1.2.0**
+## **11.03.2023 1.4.0**
+
+- interne Funktonen für Direkt-Aufrufe in YForm freigegeben ('public' statt 'protected')
+  - `YFormAdminer::dbTable(string $tablename, array $where = [])`  
+    zeigt die angegebene Tabelle im Adminer. Über den Parameter `where` kann
+    die Tabelle gefiltert werden `[['col'=>'spalte','op'=>'operator','val'=>'vergleichswert'],...]`
+  - `YFormAdminer::dbSql(string $query)`  
+    ruft die Adminer-Seite "SQL-Kommando" mit dem angegebenen SQL-Query-String auf.
+    Das Kommendo wird nicht ausgeführt, nur angezeigt
+  - `YFormAdminer::dbEdit($table_name,$data_id)`
+    Ruft die edit-Maske für den angegebenen Datensatz der Tabelle im Adminer auf.
+
+## **09.03.2023 1.3.0**
 
 - Callback umgestellt auf die "First Class Callable Syntax" bzw. "Callback-Funktionen als Objekte erster Klasse", also statt `[self::class, 'methode']` nun `self::methode(...)`. Damit wird die statische Code-Analyse verbessert (IDE, RexStan). (@christophboecker #18)
 - Notwendige Anhebung der Vorrausetzungen auf PHP ^8.1 und REDAXO ^5.15.

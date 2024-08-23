@@ -62,6 +62,48 @@ Hier das CSS der obigen Bildbeispiele:
 }
 ```
 
+## Nutzung in eigenen Addons
+
+Einige Methoden zum Aufbau einer Adminer-URL stehen zur Nutzung in eigenen Addons zur Verfügung.
+Bitte dabei beachten, dass YForm_Adminer wie Adminer nur für Admins und nicht im LiveMode verfügbar ist.
+
+```php
+// Tabelle anzeigen
+$url1 = YFormAdminer::dbTable(
+    rex::getTable('config'),
+);
+
+// Gefilterte Tabelle anzeigen
+$url2 = YFormAdminer::dbTable(
+    rex::getTable('config'),
+    [
+        [
+            'col' => 'namespace',
+            'op' => '=',
+            'val' => 'core',
+        ],
+    ],
+);
+
+// SQL-Query im Fenster "SQL-Kommando" zur Ausführung bereitstellen
+$url3 = YFormAdminer::dbSql('SELECT namespace, key FROM rex_config');
+
+// Seite editieren für Tabelle X mit Datensatz mit id=... 
+$url4 = YFormAdminer::dbEdit(
+    rex::getTable('clang'),
+    1,
+);
+
+?>
+<ul>
+<li><a href="<?= $url1 ?>" target="_blank">Tabelle "rex_config"</a></li>
+<li><a href="<?= $url2 ?>" target="_blank">Tabelle "rex_config" gefiltert (where)</a></li>
+<li><a href="<?= $url3 ?>" target="_blank">SQL-Kommando</a></li>
+<li><a href="<?= $url4 ?>" target="_blank">Datensatz editieren (rex_clang Satz 1)</a></li>
+</ul>
+
+```
+
 ## Fehler, Ideen, Fragen, Support 
 
 Schreibt doch bitte auftretende Fehler, Anmerkungen und Wünsche als Issue auf [Github](https://github.com/FriendsOfREDAXO/yform_adminer/issues).

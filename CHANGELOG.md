@@ -1,5 +1,9 @@
 # Changelog
 
+## **23-08-2024 1.4.1**
+
+- Fehler in _packege.yml_ behoben: `requires` für Redaxo-Packages korrigiert.
+
 ## **11.03.2023 1.4.0**
 
 - interne Funktonen für Direkt-Aufrufe in YForm freigegeben ('public' statt 'protected')

@@ -1,8 +1,9 @@
 # Changelog
 
-## **23-08-2024 1.4.1**
+## **25-08-2024 1.4.1**
 
-- Fehler in _packege.yml_ behoben: `requires` für Redaxo-Packages korrigiert.
+- Fehler in _package.yml_ behoben: `requires` für Redaxo-Packages korrigiert.
+- _README.md_: Fehlende Hinweise zur Nutzung von Funktionen, die URLs in den Adminer hinein erzeugen, nachgetragen
 
 ## **11.03.2023 1.4.0**
 

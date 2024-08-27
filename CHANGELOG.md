@@ -1,5 +1,9 @@
 # Changelog
 
+## **27-08-2024 1.4.2**
+
+- Fehler in _package.yml_ behoben: `adminer`-Anforderungen korrigiert (#24, @skerbis, @my-steffen)
+
 ## **25-08-2024 1.4.1**
 
 - Fehler in _package.yml_ behoben: `requires` für Redaxo-Packages korrigiert.

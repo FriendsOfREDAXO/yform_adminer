@@ -1,5 +1,14 @@
 # Changelog
 
+## **27-08-2024 1.5.0**
+
+- Code aufräumen und PSR-Kompatibilität verbessern
+  - Anpassung der Methodennamen für EP-Callback gemäß PSR-0 z.B. von `function YFORM_DATA_LIST_QUERY` in `function epYformDataListQuery`.
+  - Änderung des Methoden-Scopes der EP-Callbacks von `public` auf `protected`.
+  - Für die Methode `dbTable` ist der Parameter `$where` präziser typisiert (`@param list<array{col: string, op: string, val: int|string|float|bool}> $where`). Das hilft der IDE, ist PHP aber egal (also kein BC).
+
+> Unter dem alten Namen und Scope sind die umbenannten Methoden weiter mit dem Vermerk `deprecated` verfügbar. **Ende 2024 werden die mit `deprecated` markierten Methoden entfernt.** Sollte Bedarf bestehen, dass die Methoden (unter dem neuen Namen) weiter als `public` verfügbar sind, bitte ich um ein Issue auf GitHub. 
+
 ## **27-08-2024 1.4.2**
 
 - Fehler in _package.yml_ behoben: `adminer`-Anforderungen korrigiert (#24, @skerbis, @my-steffen)

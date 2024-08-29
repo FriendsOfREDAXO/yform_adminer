@@ -44,26 +44,22 @@ class YFormAdminer
         }
 
         // Vorbereitung: Query ermitteln
-        rex_extension::register('YFORM_DATA_LIST_QUERY', self::YFORM_DATA_LIST_QUERY(...), rex_extension::LATE);
+        rex_extension::register('YFORM_DATA_LIST_QUERY', self::epYformDataListQuery(...), rex_extension::LATE);
 
         // Im Tabellen-Header: Tabelle im Adminer anzeigen
-        // STAN: Parameter #2 $extension of static method rex_extension::register() expects callable(rex_extension_point<array<string, array>>): mixed, array{'FriendsOfRedaxo\\YFormAdminer\\YFormAdminer', 'YFORM_DATA_LIST…'} given.
-        // Was auch immer hier gewünscht ist ....
-        rex_extension::register('YFORM_DATA_LIST_LINKS', self::YFORM_DATA_LIST_LINKS(...), rex_extension::LATE);
+        rex_extension::register('YFORM_DATA_LIST_LINKS', self::epYformDataListLinks(...), rex_extension::LATE);
 
         // In den Action-Buttons: Datensatz im Adminer (Edit) anzeigen
-        // STAN: Parameter #2 $extension of static method rex_extension::register() expects callable(rex_extension_point<array<string, mixed>>): mixed, array{'FriendsOfRedaxo\\YFormAdminer\\YFormAdminer', 'YFORM_DATA_LIST…'} given.
-        // Was auch immer hier gewünscht ist ....
-        rex_extension::register('YFORM_DATA_LIST_ACTION_BUTTONS', self::YFORM_DATA_LIST_ACTION_BUTTONS(...), rex_extension::LATE);
+        rex_extension::register('YFORM_DATA_LIST_ACTION_BUTTONS', self::epYformDataListActionButtons(...), rex_extension::LATE);
 
         // Nur im Field-Editor: Links auf Felddefinition
         if ('yform/manager/table_field' === rex_be_controller::getCurrentPage()) {
-            rex_extension::register('REX_LIST_GET', self::TF_REX_LIST_GET(...));
+            rex_extension::register('REX_LIST_GET', self::epRexListGet4FieldEdit(...));
         }
 
         // Nur im Tableeditor: Links auf Tabellendefinition
         if ('yform/manager/table_edit' === rex_be_controller::getCurrentPage()) {
-            rex_extension::register('REX_LIST_GET', self::TE_REX_LIST_GET(...));
+            rex_extension::register('REX_LIST_GET', self::epRexListGet4TableEdit(...));
         }
     }
 
@@ -73,7 +69,7 @@ class YFormAdminer
      * @api
      * @param rex_extension_point<rex_yform_manager_query<rex_yform_manager_dataset>> $ep
      */
-    public static function YFORM_DATA_LIST_QUERY(rex_extension_point $ep): void
+    protected static function epYformDataListQuery(rex_extension_point $ep): void
     {
         if (true === rex::getProperty('live_mode', false)) {
             return;
@@ -84,20 +80,33 @@ class YFormAdminer
     }
 
     /**
+     * @deprecated 2.0.0 Die Methode wird auf "protected" gesetzt und umbenannt; Bitte Issue öffnen wenn weiterhin als "public" benötigt
+     * @api
+     * @param rex_extension_point<rex_yform_manager_query<rex_yform_manager_dataset>> $ep
+     */
+    public static function YFORM_DATA_LIST_QUERY(rex_extension_point $ep): void
+    {
+        self::epYformDataListQuery($ep);
+    }
+
+    /**
      * EP-Callback zur Konfiguration der Titelzeile über der Datentabelle.
      * @api
      * @param rex_extension_point<array<string,array<mixed>>> $ep
      */
-    public static function YFORM_DATA_LIST_LINKS(rex_extension_point $ep): void
+    protected static function epYformDataListLinks(rex_extension_point $ep): void
     {
         if (true === $ep->getParam('popup') || true === rex::getProperty('live_mode', false)) {
             return;
         }
+        /** @var rex_yform_manager_table $table */
+        $table = $ep->getParam('table');
+        $tablename = $table->getTableName();
+
         $links = $ep->getSubject();
-        if (is_array($links['dataset_links'])) {
+        if (0 < count($links['dataset_links'])) {
             /** @var rex_yform_manager_table $table */
-            $table = $ep->getParam('table');
-            $label = md5(__CLASS__ . $table->getTableName());
+            $label = md5(__CLASS__ . $tablename);
             if (isset(self::$query[$label])) {
                 $query = clone self::$query[$label];
                 $query->resetLimit();
@@ -116,7 +125,7 @@ class YFormAdminer
 
             $item = [
                 'label' => '&thinsp;' . self::icon(self::ICO_DB) . '&thinsp;', // ohne thinsp stimmt die Höhe nicht
-                'url' => self::dbTable($ep->getParams()['table']->getTableName()),
+                'url' => self::dbTable($tablename),
                 'attributes' => [
                     'class' => ['btn-default', self::iconClass(self::ICO_DB)],
                     'target' => ['_blank'],
@@ -125,10 +134,10 @@ class YFormAdminer
             ];
             array_unshift($links['dataset_links'], $item);
         }
-        if (is_array($links['table_links'])) {
+        if (0 < count($links['table_links'])) {
             $item = [
                 'label' => '&thinsp;' . self::icon(self::ICO_YF) . '&thinsp;', // ohne thinsp stimmt die Höhe nicht
-                'url' => self::YformTableTable($ep->getParams()['table']->getTableName()),
+                'url' => self::YformTableTable($tablename),
                 'attributes' => [
                     'class' => ['btn-default', self::iconClass(self::ICO_YF)],
                     'target' => ['_blank'],
@@ -137,10 +146,10 @@ class YFormAdminer
             ];
             array_unshift($links['table_links'], $item);
         }
-        if (is_array($links['field_links'])) {
+        if (0 < count($links['field_links'])) {
             $item = [
                 'label' => '&thinsp;' . self::icon(self::ICO_YF) . '&thinsp;', // ohne thinsp stimmt die Höhe nicht
-                'url' => self::yformFieldTable($ep->getParams()['table']->getTableName()),
+                'url' => self::yformFieldTable($tablename),
                 'attributes' => [
                     'class' => ['btn-default', self::iconClass(self::ICO_YF)],
                     'target' => ['_blank'],
@@ -153,6 +162,16 @@ class YFormAdminer
     }
 
     /**
+     * @deprecated 2.0.0 Die Methode wird auf "protected" gesetzt und umbenannt; Bitte Issue öffnen wenn weiterhin als "public" benötigt
+     * @api
+     * @param rex_extension_point<array<string,array<mixed>>> $ep
+     */
+    public static function YFORM_DATA_LIST_LINKS(rex_extension_point $ep): void
+    {
+        self::epYformDataListLinks($ep);
+    }
+
+    /**
      * EP-Callback zum Einfügen zusätzlicher Button in das Action-Menü
      * Da für die Anzeige der Daten auf Basis der tatsächlichen Query (ggf. mit Joins etc.)
      * das Query-Object hier nicht zur Verfügung steht, wird nur ein Dummy-Eintrag eingebaut
@@ -160,7 +179,7 @@ class YFormAdminer
      * @api
      * @param rex_extension_point<array<string,mixed>> $ep
      */
-    public static function YFORM_DATA_LIST_ACTION_BUTTONS(rex_extension_point $ep): void
+    protected static function epYformDataListActionButtons(rex_extension_point $ep): void
     {
         if (true === rex::getProperty('live_mode', false)) {
             return;
@@ -226,12 +245,22 @@ class YFormAdminer
     }
 
     /**
+     * @deprecated 2.0.0 Die Methode wird auf "protected" gesetzt und umbenannt; Bitte Issue öffnen wenn weiterhin als "public" benötigt
+     * @api
+     * @param rex_extension_point<array<string,mixed>> $ep
+     */
+    public static function YFORM_DATA_LIST_ACTION_BUTTONS(rex_extension_point $ep): void
+    {
+        self::epYformDataListActionButtons($ep);
+    }
+
+    /**
      * EP-Callback zur Konfiguration der Liste der Tabellenfelder im
      * YForm-Table-Manager.
      * @api
      * @param rex_extension_point<rex_yform_list> $ep
      */
-    public static function TF_REX_LIST_GET(rex_extension_point $ep): void
+    protected static function epRexListGet4FieldEdit(rex_extension_point $ep): void
     {
         if (true === rex::getProperty('live_mode', false)) {
             return;
@@ -259,12 +288,22 @@ class YFormAdminer
     }
 
     /**
+     * @deprecated 2.0.0 Die Methode wird auf "protected" gesetzt und umbenannt; Bitte Issue öffnen wenn weiterhin als "public" benötigt
+     * @api
+     * @param rex_extension_point<rex_yform_list> $ep
+     */
+    public static function TF_REX_LIST_GET(rex_extension_point $ep): void
+    {
+        self::epRexListGet4FieldEdit($ep);
+    }
+
+    /**
      * EP-Callback zur Konfiguration der Liste "Tabellenübersicht" im
      * YForm-Table-Manager.
      * @api
      * @param rex_extension_point<rex_yform_list> $ep
      */
-    public static function TE_REX_LIST_GET(rex_extension_point $ep): void
+    protected static function epRexListGet4TableEdit(rex_extension_point $ep): void
     {
         if (true === rex::getProperty('live_mode', false)) {
             return;
@@ -297,10 +336,19 @@ class YFormAdminer
     }
 
     /**
+     * @deprecated 2.0.0 Die Methode wird auf "protected" gesetzt und umbenannt; Bitte Issue öffnen wenn weiterhin als "public" benötigt
+     * @api
+     * @param rex_extension_point<rex_yform_list> $ep
+     */
+    public static function TE_REX_LIST_GET(rex_extension_point $ep): void
+    {
+        self::epRexListGet4TableEdit($ep);
+    }
+
+    /**
      * Adminer: Aufruf-Basis
      * ein eventueller Platzhalter ###xx### wird von rex_url::backendPage
      * escaped, was wieder zurckgedreht wird, um die Url in Listen nutzen zukönnen.
-     * @ api
      * @param array<string|scalar> $params
      */
     protected static function baseUrl(array $params = []): string
@@ -329,7 +377,8 @@ class YFormAdminer
      *      ],
      *      ...
      *  ].
-     * @ api
+     * @api
+     * @param list<array{col: string, op: string, val: int|string|float|bool}> $where 
      */
     public static function dbTable(string $tablename, array $where = []): string
     {
@@ -341,7 +390,7 @@ class YFormAdminer
         ];
         foreach ($where as $key => $item) {
             foreach ($item as $k => $v) {
-                $params[sprintf('where[%s][%s]',$key, $k)] = $v;
+                $params[sprintf('where[%s][%s]', $key, $k)] = $v;
             }
         }
         return self::baseUrl($params);
@@ -349,7 +398,7 @@ class YFormAdminer
 
     /**
      * Adminer: ruft die Adminer-Seite "SQL-Kommando" auf.
-     * @ api
+     * @api
      */
     public static function dbSql(string $query): string
     {
@@ -365,7 +414,6 @@ class YFormAdminer
 
     /**
      * Adminer: ruft rex_yform_field allgemein auf.
-     * @ api
      */
     protected static function YformField(): string
     {
@@ -374,7 +422,7 @@ class YFormAdminer
 
     /**
      * Adminer: Ruft die edit-Maske für den angegebenen Datensatz der Tabelle im Adminer auf.
-     * @ api
+     * @api
      */
     public static function dbEdit(string $tablename, int|string $id): string
     {
@@ -391,7 +439,6 @@ class YFormAdminer
 
     /**
      * ruft Adminer: rex_yform_table für eine angegebene YForm-Tabelle aus.
-     * @ api
      */
     protected static function YformTableTable(string $tablename): string
     {
@@ -409,7 +456,6 @@ class YFormAdminer
 
     /**
      * Adminer: ruft rex_yform_field für eine bestimmte Tabelle auf.
-     * @ api
      */
     protected static function yformFieldTable(string $tablename): string
     {
@@ -427,7 +473,6 @@ class YFormAdminer
 
     /**
      * Adminer: ruft rex_yform_field für einen bestimmten Eintrag auf.
-     * @ api
      */
     protected static function yformFieldItem(int|string $id): string
     {
@@ -445,7 +490,6 @@ class YFormAdminer
 
     /**
      * liefert zu einer Icon-Nummer das Icon-HTML.
-     * @ api
      */
     protected static function icon(int $icon): string
     {
@@ -459,7 +503,6 @@ class YFormAdminer
 
     /**
      * liefert zu einer Icon-Nummer die Klasse zur Darstellungs-Anpassung.
-     * @ api
      */
     protected static function iconClass(int $icon): string
     {
@@ -474,7 +517,6 @@ class YFormAdminer
     /**
      * erzeugt einen a-Tag für den Link
      * Mindestangabe sind Link ind Icon.
-     * @ api
      */
     protected static function link(string $url, int $icon, string $title = '', string $label = ''): string
     {
@@ -486,7 +528,6 @@ class YFormAdminer
 
     /**
      * @param array<string, int|string> $params
-     * @ api
      */
     protected static function preparedQuery(string $query, array $params = []): string
     {

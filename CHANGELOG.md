@@ -1,5 +1,9 @@
 # Changelog
 
+## **17.03.2025 1.6.0**
+
+- St. Patricks-Day-Release: Anpassung der Versionsvoraussetzung an Adminer 3.0 in der __package.yml__
+
 ## **27-08-2024 1.5.0**
 
 - Code aufräumen und PSR-Kompatibilität verbessern

@@ -196,13 +196,18 @@ class YFormAdminer
          * Note:
          * Stand 07.03.2023 gibt es nur das GH-Repo und keine neue Versionsnummer.
          * Daher auf das neue Fragment als Unterscheidungsmerkmal setzen.
+         * 
+         * Ab YForm 5.0 sind die Plugins aufgelöst, die Suche muss im Addon passieren
          */
-        $isPostYform404 = is_file(rex_path::plugin('yform', 'manager', 'fragments/yform/manager/page/list.php'));
+        $isNotPreYform405 = 
+            is_file(rex_path::addon('yform', 'fragments/yform/manager/page/list.php'))
+            ||
+            is_file(rex_path::plugin('yform', 'manager', 'fragments/yform/manager/page/list.php'));
 
         // Adminer-Button für den Datensatz
         $url = self::dbEdit($table->getTableName(), '___id___');
         $title = rex_i18n::msg('yform_adminer_ydl_ds_title');
-        if ($isPostYform404) {
+        if ($isNotPreYform405) {
             $buttons['adminer'] = [
                 'url' => $url,
                 'content' => self::icon(self::ICO_DB) . ' Adminer',
@@ -227,7 +232,7 @@ class YFormAdminer
             $url = self::dbSql($stmt);
 
             $title = rex_i18n::msg('yform_adminer_ydll_sql_title');
-            if ($isPostYform404) {
+            if ($isNotPreYform405) {
                 $buttons['adminer-sql'] = [
                     'url' => $url,
                     'content' => self::icon(self::ICO_QRY) . ' ' . rex_i18n::msg('yform_adminer_ydl_sql_label'),

@@ -1,5 +1,9 @@
 # Changelog
 
+## **25.06.2025 1.7.0**
+
+- Anpassung an YForm 5.0, da die Plugins ab Version 5 aufgelöst sind. 
+
 ## **17.03.2025 1.6.0**
 
 - St. Patricks-Day-Release: Anpassung der Versionsvoraussetzung an Adminer 3.0 in der __package.yml__

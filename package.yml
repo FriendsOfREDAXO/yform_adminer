@@ -1,3 +1,4 @@
+package: yform_adminer
 version: '1.7.0'
 author: Friends Of REDAXO
 supportpage: https://github.com/FriendsOfREDAXO/yform_adminer

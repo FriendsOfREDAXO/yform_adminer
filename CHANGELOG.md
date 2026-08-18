@@ -1,5 +1,9 @@
 # Changelog
 
+## **18.06.2026 1.8.0**
+
+- Anpassung an Adminer 4.0: Package-Abhängigkeit auf Adminer 4 erweitert (`'>=1.0, <5'`)
+
 ## **25.06.2025 1.7.0**
 
 - Anpassung an YForm 5.0, da die Plugins ab Version 5 aufgelöst sind. 

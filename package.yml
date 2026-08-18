@@ -1,5 +1,5 @@
 package: yform_adminer
-version: '1.7.0'
+version: '1.8.0'
 author: Friends Of REDAXO
 supportpage: https://github.com/FriendsOfREDAXO/yform_adminer
 
@@ -7,6 +7,6 @@ requires:
     redaxo: '^5.15.0'
     packages:
         yform: '>=4.0.0'
-        adminer: '>=1.0, <4'
+        adminer: '>=1.0, <5'
     php:
         version: '^8.1'
